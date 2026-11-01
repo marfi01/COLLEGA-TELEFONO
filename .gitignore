@@ -6,3 +6,6 @@ dal-pc/
 node_modules/
 tools/
 Collega Telefono-win32-x64/
+
+# zip della release (si carica su GitHub Releases, non nel repo: supera i 100 MB)
+*.zip

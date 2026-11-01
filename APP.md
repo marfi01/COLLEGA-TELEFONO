@@ -72,6 +72,17 @@ npx @electron/packager . "Collega Telefono" --platform=win32 --arch=x64 --out ..
 
 Controllo sintassi rapido: `node --check main.js`.
 
+## Dopo ogni ricompilazione: ricrea lo zip della release (OBBLIGATORIO)
+
+Ogni volta che ricompili l'exe devi **ricreare lo zip della release ed eliminare quello vecchio**. L'utente scarica l'app dalla Release di GitHub, quindi uno zip vecchio vuol dire una versione sbagliata online.
+
+1. Prepara una cartella temporanea con `COLLEGA TELEFONO\Collega Telefono-win32-x64\` dentro (copia della cartella dell'exe appena compilata). **Escludi** `dal-telefono/`, `dal-pc/` (dati personali) e `tools/` (si riscarica da solo).
+2. Comprimila in `C:\Users\hp\Desktop\CLAUDE\COLLEGA TELEFONO\Collega-Telefono-vX.Y.Z.zip` (dentro la cartella del progetto, accanto a `README.md`). `*.zip` è nel `.gitignore`: lo zip supera i 100 MB e git lo rifiuterebbe. Il nome deve coincidere con quello scritto in `README.md`.
+3. **Elimina lo zip della versione precedente** da quella cartella.
+4. Se cambia la versione, aggiorna il nome dello zip in `README.md` (sezione "Scaricare e installare").
+5. Controlla che dentro lo zip ci sia `Collega Telefono.exe` e nessun file personale.
+6. Di' all'utente di caricare il nuovo zip su GitHub (Releases → nuova release con nuovo tag, o modifica di quella esistente) e dove si trova il file.
+
 ## Trappole note
 
 - **`ELECTRON_RUN_AS_NODE=1`** è impostata nell'ambiente di VS Code/Claude Code: con quella variabile l'exe parte come Node e **esce subito senza errori**. Prima di avviare l'exe per testare, rimuovila (`Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell). Sul PC dell'utente non c'è.
@@ -93,4 +104,4 @@ Controllo sintassi rapido: `node --check main.js`.
 
 - Codice e commenti come il resto del progetto: JS semplice senza framework, commenti brevi in italiano, nessuna dipendenza in più se non serve.
 - Non caricare su git `dal-telefono/`, `dal-pc/`, `tools/`, `node_modules/` e la cartella dell'exe (vedi `.gitignore`).
-- Dopo ogni modifica a `app/`: ricompila l'exe e aggiorna `README.md` se cambia qualcosa di visibile all'utente.
+- Dopo ogni modifica a `app/`: ricompila l'exe, **ricrea lo zip della release eliminando il vecchio** (vedi sezione sopra) e aggiorna `README.md` se cambia qualcosa di visibile all'utente.
