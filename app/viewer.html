@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Collega Telefono</title>
+<style>
+  :root { --bg:#14161a; --card:#1d2026; --line:#2b2f37; --txt:#e8eaed; --mut:#8b929d; --acc:#2e8bff; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--txt); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+  header { display:flex; gap:20px; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line); background:var(--card); }
+  header img { width:120px; height:120px; border-radius:10px; background:#fff; }
+  .conn h1 { font-size:18px; margin:0 0 6px; }
+  .conn p { margin:4px 0; color:var(--mut); font-size:14px; }
+  .url { font-size:20px; font-weight:600; color:var(--acc); cursor:pointer; user-select:all; }
+  .remote { margin-left:auto; text-align:right; font-size:13px; color:var(--mut); max-width:340px; }
+  .sw { cursor:pointer; color:var(--txt); font-size:17px; display:inline-flex; align-items:center; gap:10px; }
+  .sw input { width:28px; height:28px; accent-color:var(--acc); cursor:pointer; margin:0; }
+  #remoteBox { margin-top:8px; }
+  #remoteBox .err { color:#ff7b7b; }
+  #pwRow { margin-top:6px; color:var(--mut); font-size:14px; }
+  .pw { font-size:26px; font-weight:700; letter-spacing:4px; color:var(--txt); }
+  button { background:#2a2f38; color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:7px 12px; font-size:13px; cursor:pointer; }
+  button:hover { border-color:var(--acc); }
+  button.pri { background:var(--acc); border-color:var(--acc); color:#fff; }
+  main { flex:1; display:grid; grid-template-columns:1fr 1fr; min-height:0; }
+  .col { display:flex; flex-direction:column; min-height:0; border-right:1px solid var(--line); }
+  .col:last-child { border-right:0; }
+  .col h2 { font-size:15px; margin:0; padding:14px 20px 8px; display:flex; justify-content:space-between; align-items:center; }
+  .list { flex:1; overflow:auto; padding:0 12px 12px; }
+  .item { display:flex; align-items:center; gap:12px; padding:8px; border-radius:10px; cursor:pointer; }
+  .item:hover { background:var(--card); }
+  .thumb { width:52px; height:52px; border-radius:8px; object-fit:cover; background:#262a31; display:grid; place-items:center; font-size:22px; flex:none; }
+  .meta { flex:1; min-width:0; }
+  .name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:14px; }
+  .sub { color:var(--mut); font-size:12px; }
+  .item button { padding:4px 8px; opacity:0; }
+  .item:hover button { opacity:1; }
+  .empty { color:var(--mut); text-align:center; padding:40px 20px; font-size:14px; }
+  .drop { margin:0 12px 10px; padding:18px; border:2px dashed var(--line); border-radius:12px; text-align:center; color:var(--mut); font-size:14px; }
+  body.drag .drop { border-color:var(--acc); color:var(--txt); background:rgba(46,139,255,.08); }
+  #lb { position:fixed; inset:0; background:rgba(0,0,0,.92); display:none; align-items:center; justify-content:center; z-index:10; }
+  #lb.on { display:flex; }
+  #lb img { max-width:92vw; max-height:88vh; object-fit:contain; }
+  #lb .cap { position:absolute; bottom:14px; left:0; right:0; text-align:center; color:#ccc; font-size:13px; }
+  #lb .nav { position:absolute; top:50%; font-size:34px; background:none; border:0; color:#fff; padding:20px; }
+  #lb .prev { left:6px; } #lb .next { right:6px; } #lb .x { position:absolute; top:10px; right:14px; font-size:26px; }
+</style>
+</head>
+<body>
+<header>
+  <img id="qr" alt="QR">
+  <div class="conn">
+    <h1>📱 Collega Telefono</h1>
+    <p id="hint">Inquadra il QR col telefono (stesso Wi-Fi) oppure scrivi l'indirizzo:</p>
+    <div class="url" id="url" title="Clic per copiare"></div>
+    <div id="pwRow" style="display:none">Password: <span class="pw" id="pw"></span></div>
+  </div>
+  <div class="remote">
+    <label class="sw"><input type="checkbox" id="remoteChk"> <span>🌍 Accesso da fuori casa</span></label>
+    <div id="remoteBox"></div>
+  </div>
+</header>
+<main>
+  <div class="col">
+    <h2>Ricevuti dal telefono <button id="openIn">Apri cartella</button></h2>
+    <div class="list" id="inList"></div>
+  </div>
+  <div class="col">
+    <h2>Da inviare al telefono <button id="pick" class="pri">+ Aggiungi file</button></h2>
+    <div class="drop">Trascina qui i file da mandare al telefono</div>
+    <div class="list" id="outList"></div>
+  </div>
+</main>
+<div id="lb">
+  <button class="x nav" id="lbx">✕</button>
+  <button class="nav prev" id="lbp">‹</button>
+  <img id="lbi">
+  <button class="nav next" id="lbn">›</button>
+  <div class="cap" id="lbc"></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let state = { inFiles: [], outFiles: [] };
+let gallery = [], gIdx = 0, shownUrl = '';
+
+const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(0) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+const fmtDate = ms => new Date(ms).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+function render(listEl, files, key, emptyMsg) {
+  listEl.innerHTML = '';
+  if (!files.length) { listEl.innerHTML = '<div class="empty">' + emptyMsg + '</div>'; return; }
+  for (const f of files) {
+    const el = document.createElement('div');
+    el.className = 'item';
+    const th = f.isImage ? Object.assign(document.createElement('img'), { src: f.url, className: 'thumb', loading: 'lazy' })
+                         : Object.assign(document.createElement('div'), { className: 'thumb', textContent: '📄' });
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerHTML = '<div class="name"></div><div class="sub"></div>';
+    meta.firstChild.textContent = f.name;
+    meta.lastChild.textContent = fmtSize(f.size) + ' · ' + fmtDate(f.mtime);
+    const show = Object.assign(document.createElement('button'), { textContent: 'Cartella', title: 'Mostra nella cartella' });
+    show.onclick = e => { e.stopPropagation(); api.reveal(key, f.name); };
+    const del = Object.assign(document.createElement('button'), { textContent: '🗑', title: 'Sposta nel cestino' });
+    del.onclick = e => { e.stopPropagation(); api.trash(key, f.name); };
+    el.append(th, meta, show, del);
+    el.onclick = () => f.isImage ? openLightbox(files.filter(x => x.isImage), f) : api.open(key, f.name);
+    listEl.append(el);
+  }
+}
+
+async function refresh() {
+  state = await api.info();
+  renderRemote(state.remote);
+  render($('inList'), state.inFiles, 'in', 'Ancora niente.<br>Invia qualcosa dal telefono.');
+  render($('outList'), state.outFiles, 'out', 'Nessun file da inviare.');
+}
+
+function renderRemote(r) {
+  const box = $('remoteBox');
+  const on = r.status === 'on';
+  $('remoteChk').checked = r.status === 'starting' || on;
+  box.innerHTML = '';
+  if (r.status === 'starting') box.textContent = 'Connessione a internet in corso…';
+  else if (r.status === 'error') { const d = document.createElement('div'); d.className = 'err'; d.textContent = 'Errore: ' + r.error; box.append(d); }
+  // con l'accesso da fuori casa attivo, QR e indirizzo grandi diventano quelli di internet
+  shownUrl = on ? r.url : state.url;
+  $('qr').src = on ? r.qr : state.qr;
+  $('url').textContent = shownUrl;
+  $('hint').textContent = on ? 'Da internet: inquadra il QR e scrivi la password sul telefono:' : "Inquadra il QR col telefono (stesso Wi-Fi) oppure scrivi l'indirizzo:";
+  $('pwRow').style.display = on ? '' : 'none';
+  $('pw').textContent = on ? r.password : '';
+}
+$('remoteChk').onchange = e => api.remote(e.target.checked);
+
+function openLightbox(imgs, current) {
+  gallery = imgs; gIdx = imgs.indexOf(current); showLb(); $('lb').classList.add('on');
+}
+function showLb() {
+  const f = gallery[gIdx];
+  $('lbi').src = f.url;
+  $('lbc').textContent = f.name + '  (' + (gIdx + 1) + '/' + gallery.length + ')';
+}
+const step = d => { gIdx = (gIdx + d + gallery.length) % gallery.length; showLb(); };
+$('lbx').onclick = () => $('lb').classList.remove('on');
+$('lbp').onclick = () => step(-1);
+$('lbn').onclick = () => step(1);
+$('lb').onclick = e => { if (e.target === $('lb')) $('lb').classList.remove('on'); };
+addEventListener('keydown', e => {
+  if (!$('lb').classList.contains('on')) return;
+  if (e.key === 'Escape') $('lb').classList.remove('on');
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') step(1);
+});
+
+$('url').onclick = () => { api.copy(shownUrl); const old = $('url').textContent; $('url').textContent = 'Copiato!'; setTimeout(() => $('url').textContent = old, 900); };
+$('openIn').onclick = () => api.openDir('in');
+$('pick').onclick = async () => { const p = await api.pick(); if (p.length) api.addFiles(p); };
+
+addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('drag'); });
+addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('drag'); });
+addEventListener('drop', e => {
+  e.preventDefault(); document.body.classList.remove('drag');
+  const paths = [...e.dataTransfer.files].map(f => api.pathFor(f)).filter(Boolean);
+  if (paths.length) api.addFiles(paths);
+});
+
+api.onChange(refresh);
+addEventListener('focus', refresh);
+refresh();
+</script>
+</body>
+</html>

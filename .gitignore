@@ -1,0 +1,8 @@
+# file personali scambiati col telefono: NON vanno su GitHub
+dal-telefono/
+dal-pc/
+
+# generati / scaricati
+node_modules/
+tools/
+Collega Telefono-win32-x64/
