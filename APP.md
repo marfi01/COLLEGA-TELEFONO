@@ -49,6 +49,17 @@ COLLEGA TELEFONO/
 - Una richiesta è "esterna" se ha `cf-connecting-ip` o l'host finisce in `trycloudflare.com` (`isExternal`). Le esterne richiedono il cookie `ct_token` (HttpOnly, SameSite=Strict, Secure) ottenuto con POST `/login`; senza token solo `LOGIN_PAGE`, il resto 401. Dopo 5 errori per IP: blocco 60 s (429). Le richieste dalla LAN **non** chiedono password.
 - Se cambi le route del server, controlla che passino dal blocco `isExternal` in `startServer`.
 
+## Ripartire da un clone (l'exe non c'è)
+
+Dopo un clone da GitHub ci sono solo i sorgenti. Non sono nel repo, e vanno ricreati: la cartella dell'exe, `app/node_modules/`, `tools/` e le cartelle dati.
+
+1. **Verifica che ci sia Node.js** (`node -v`). Se manca, va installato da nodejs.org (versione LTS); non serve altro.
+2. **Installa le dipendenze:** `npm install` dentro `app/` (scarica Electron, il packager e `qrcode`; serve internet).
+3. **Compila l'exe** con il comando qui sotto. L'exe viene creato in `Collega Telefono-win32-x64/`, accanto ad `app/` (per via di `--out ..`).
+4. **Non servono altri passi:** `dal-telefono/`, `dal-pc/` e `tools/` si creano da soli al primo avvio dell'exe (`cloudflared` viene scaricato con la barra di caricamento).
+
+Cosa NON fa nessun editor (VS Code compreso): non conosce questi passi, vanno eseguiti i comandi.
+
 ## Comandi (esegui tu)
 
 Dalla cartella `app/`:

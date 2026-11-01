@@ -13,9 +13,28 @@ Inquadri un QR code col telefono, si apre una pagina nel browser e da lì mandi 
 - **Accesso da fuori casa (opzionale):** una spunta apre un tunnel Cloudflare e mostra un nuovo QR con una password di 6 caratteri, valida solo finché il tunnel è acceso.
 - Nessun account, nessun cloud intermedio: i file passano direttamente tra telefono e PC.
 
+## Scaricare e installare l'app (su un altro computer)
+
+Per **usare** l'app non serve clonare il repository, né GitHub Desktop, né Node.js. Basta scaricare la *Release*, cioè il programma già pronto:
+
+1. Apri la pagina del repository su GitHub (https://github.com/marfi01/COLLEGA-TELEFONO).
+2. Nella colonna destra clicca **Releases** e poi sull'ultima versione (la più in alto, per esempio `v1.0.0`).
+3. In fondo alla pagina, sotto **Assets**, scarica `Collega-Telefono-v1.0.0.zip` (circa 150 MB).
+4. Estrai lo zip dove vuoi, per esempio sul Desktop: tasto destro → **Estrai tutto**. Ottieni una cartella `COLLEGA TELEFONO`.
+5. Apri la cartella `Collega Telefono-win32-x64` e fai doppio clic su `Collega Telefono.exe`. Se vuoi un'icona comoda: tasto destro sull'exe → **Invia a** → **Desktop (crea collegamento)**.
+
+Al primo avvio l'app scarica da sola un componente (circa 50 MB) e mostra una barra di caricamento: serve internet solo quella volta. Non servono permessi di amministratore.
+
+Note:
+- Tieni **tutta** la cartella `COLLEGA TELEFONO`: l'exe da solo non parte, e i file scambiati vengono salvati lì accanto (`dal-telefono/` e `dal-pc/`).
+- Windows può avvisarti con SmartScreen perché l'exe non è firmato: **Maggiori informazioni → Esegui comunque**. Alla prima apertura può chiedere anche il permesso del firewall: consenti solo le reti private.
+- Per aggiornare l'app scarica la nuova Release e sostituisci la cartella `Collega Telefono-win32-x64`, lasciando `dal-telefono/` e `dal-pc/`.
+
+Il clone del repository serve solo se vuoi **modificare** il codice o ricompilare l'exe: vedi "Compilare l'exe" più sotto.
+
 ## Come si usa
 
-### Con l'exe (consigliato)
+### Con l'exe
 
 1. Avvia `Collega Telefono.exe`.
 2. Inquadra il QR col telefono (PC e telefono sullo stesso Wi-Fi) oppure scrivi l'indirizzo mostrato, tipo `http://192.168.1.20:8080`.
